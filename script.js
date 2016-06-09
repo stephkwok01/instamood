@@ -11,6 +11,7 @@ $(document).ready(function() {
   var mediaUrl = API_DOMAIN + RECENT_MEDIA_PATH + token;
 
   $.ajax({
+    method: "GET",
     url: mediaUrl,
     dataType: "jsonp",
     success: handleResponse,
