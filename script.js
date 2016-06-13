@@ -1,7 +1,5 @@
 var API_DOMAIN = "https://api.instagram.com/v1";
 var RECENT_MEDIA_PATH = "/users/self/media/recent";
-// what do you think a variable in all caps means?
-
 
 $(document).ready(function() {
   var token = window.location.hash;
@@ -22,17 +20,36 @@ $(document).ready(function() {
   })
 });
 
+var SentimentCounter=0;
+var positive=0;
+function getSentiment(text){   
+  $.ajax({
+    method: "GET",
+    url:"https://twinword-sentiment-analysis.p.mashape.com/analyze/",
+    headers:{"X-Mashape-Key": "PbStp7XTqcmshozwb4sA09AZRaTEp1qKVYHjsnE0LcKWj66qWd",
+    "Accept": "application/json",
+    },
+    data: "text=" + text,
+    // $.each(data, function(i,text:response.data[i].caption.text));
+    success: analyzeSentiment,
+  });
+}
+
+function analyzeSentiment(result) {
+  positive=positive+result.score;
+  $(".photos"+SentimentCounter).append("<div></div>"+ "positivity: " + result.score);
+  SentimentCounter++;
+  $(".sentiment").text(positive);
+}
+
 function handleResponse(response) {
-  console.log(response);
-  // add stuff here!
-  for (var i=0; i < response.data.length; i++)
-  {
+  for (var i=0; i < response.data.length; i++) {
     var image_link = response.data[i].images.standard_resolution.url;
-    // var img = $("<img />").attr('src', image_link)
-    var img = $("<img src='" + image_link + "' />");
+    var img = $("<div>"+"<img src='" + image_link + "' />" + response.data[i].caption.text +"</div>").addClass("photos"+i);
     $("#list").append(img);
-    $("#list").append(response.data[i].caption.text); 
+    getSentiment(response.data[i].caption.text);
   }
+
   ego(response);
   popularity(response);
   averageWords(response);
@@ -76,32 +93,18 @@ function averageWords(response){
 
 function time(response){
   var weekDays = [0, 0, 0, 0, 0, 0, 0]
+  var weekNames = ["Sunday", "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]
   for (var i = 0; i < response.data.length; i++) {
   var date = new Date(parseInt(response.data[i].created_time) * 1000);
   var dayOfTheWeek = date.getDay();
   weekDays[dayOfTheWeek]++; 
   }
   var largest = Math.max.apply(Math, weekDays);
-  if (largest === 0){
-    $(".active").append("Sunday")
-  }
-  else if (largest === 1){
-    $(".active").append("Monday")
-  }
-  else if (largest === 2){
-    $(".active").append("Tuesday")
-  }
-  else if (largest === 3){
-    $(".active").append("Wednesday")
-  }
-  else if (largest === 4){
-    $(".active").append("Thursday")
-  }
-  else if (largest === 5){
-    $(".active").append("Friday")
-  }
-  else if (largest === 6){
-    $(".active").append("Saturday")
+  var largestNum;
+  for (var i = 0; i < 7 ; i++){
+    if(weekDays[i] === largest) {
+      $(".active").append(weekNames[i])
+    }
   }
 }
 
